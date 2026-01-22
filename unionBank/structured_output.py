@@ -39,8 +39,7 @@ def generate_structured_output(grouped_transactions):
             amount_str = "-" + amount_str.replace('(Dr)', '')
         elif 'Cr' in check_amt:
             txn_type = "CREDIT"
-            amount_str = amount_str.replace('(Cr)', '')
-            amount_str = "+" + amount_str.replace('(Dr)', '')
+            amount_str = "+" + amount_str.replace('(Cr)', '')
         else:
             txn_type = "UNKNOWN"
         
