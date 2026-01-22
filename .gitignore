@@ -1,0 +1,23 @@
+# Python environments
+venv/
+env/
+.env
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Mac OS
+.DS_Store
+
+# Application Output Files (ignore the extracted json files)
+page_*_*.json
+*.pdf
+extracted_text_plumber.txt
+extracted_data.json
+
+# IDE settings
+.vscode/
+.idea/
