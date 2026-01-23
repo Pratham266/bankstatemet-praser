@@ -1,3 +1,4 @@
+import kotakBank
 import sys
 import pdfplumber
 import json
@@ -12,20 +13,19 @@ def process_bank_statement_pdf(pdf_file, bank_name="UNION BANK OF INDIA", passwo
         case "UNION BANK OF INDIA":
             from unionBank.grouping_logic import group_transactions
             from unionBank.structured_output import generate_structured_output
+            from unionBank.table_settings import table_settings
         case "KOTAK MAHINDRA BANK":
             # Default to Kotak (or explicitly check "KOTAK MAHINDRA BANK")
             from kotakBank.grouping_logic import group_transactions
             from kotakBank.structured_output import generate_structured_output
+            from kotakBank.table_settings import table_settings
         case _:
             # Default to Kotak (or explicitly check "KOTAK MAHINDRA BANK")
             from kotakBank.grouping_logic import group_transactions
             from kotakBank.structured_output import generate_structured_output
+            from kotakBank.table_settings import table_settings
 
     all_transactions = []
-    table_settings = {
-        "vertical_strategy": "text",
-        "horizontal_strategy": "text",
-    }
 
     # pdf_file can be a path or a file-like object (bytes)
     with pdfplumber.open(pdf_file, password=password) as pdf:
