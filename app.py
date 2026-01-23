@@ -71,16 +71,16 @@ if uploaded_file is not None:
                     transactions = main.process_bank_statement_pdf(uploaded_file, bank_name=selected_bank, password=password)
                     st.success(f"Extraction Complete for {selected_bank}!")
                     
+                    # Also show as table
+                    if transactions:
+                        st.subheader("Tabular View")
+                        st.dataframe(transactions)
+
                     # Display as JSON
                     json_str = json.dumps(transactions, indent=2)
                     st.subheader("Extracted JSON Data")
                     st.code(json_str, language="json")
                     
-                    # Also show as table
-                    if transactions:
-                            st.subheader("Tabular View")
-                            st.dataframe(transactions)
-
                     st.download_button(
                         label="Download Result as JSON",
                         data=json_str,
