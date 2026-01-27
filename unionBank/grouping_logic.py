@@ -11,15 +11,19 @@ def is_time(text):
         text and re.search(r'\d{1,2}:\d{2}\s*(AM|PM)', text)
     )
 
-def is_transaction_start(row):
+def is_transaction_start(row,dateIndex):
     """
     Transaction starts ONLY when a DATE is found in row[1].
     """
     if len(row) < 2:
         return False
 
-    col1 = str(row[0]).strip()
-
+    col1 = str(row[dateIndex]).strip().replace('/', '-')
+    
+    # Exclude metadata rows that might contain a date but are not transactions
+    if any(keyword in col1 for keyword in ["Statement Date", "Statement Period", "Account Number", "Customer", "Branch"]):
+        return False
+        
     return is_date(col1)
 
 
@@ -44,24 +48,32 @@ def group_transactions(pages,page_number):
         for row in page:
             if not row:
                 continue
-            row_upper = [str(c).upper().strip() for c in row]
-            if len(row_upper) >= 2 and "BALANCE" in row_upper[-1] and "AMOUNT" in row_upper[-2]:
+            # Check if all required keywords are present in the row
+            row_str_upper = [str(c).upper().strip() for c in row]
+            row_joined = " ".join(row_str_upper)
+            
+            required_keywords = ["DATE", "TRANSACTION", "REMARKS", "AMOUNT", "BALANCE"]
+            
+            if all(keyword in row_joined for keyword in required_keywords):
                 for idx, val in enumerate(row):
-                    if "DATE" in str(val).upper().strip():
-                        dateIndex=idx
-                    elif "SACTION ID" in str(val).upper().strip():
-                        transactionIdIndex=idx
-                    elif "REMARKS" in str(val).upper().strip():
-                        remarksIndex=idx
-                    elif "AMOUNT" in str(val).upper().strip():
-                        amountIndex=idx
-                    elif "BALANCE" in str(val).upper().strip():
-                        balanceIndex=idx
+                    val_upper = str(val).upper().strip()
+                    if "DATE" in val_upper:
+                        dateIndex = idx
+                    elif "TRANSACTION" in val_upper and "ID" in val_upper:
+                         # Ensure it matches "Transaction Id" or similar, not just "Transaction"
+                        transactionIdIndex = idx
+                    elif "REMARKS" in val_upper:
+                        remarksIndex = idx
+                    elif "AMOUNT" in val_upper:
+                        amountIndex = idx
+                    elif "BALANCE" in val_upper:
+                        balanceIndex = idx
                 continue
             # Heuristic: New Transaction starts with a date in the first column
-            if is_transaction_start(row):
+            if is_transaction_start(row,dateIndex):
                 # If we were building a transaction, save it
                 if current_transaction:
+                    print('current_transaction',current_transaction)
                     transactions.append(current_transaction)
                 
                 # Start new transaction
@@ -74,7 +86,11 @@ def group_transactions(pages,page_number):
                 json.dump(transactions, f, indent=4)
     # Validation and Processing to merge rows
     merged_transactions = []
-    
+    print('dateIndex',dateIndex)
+    print('transactionIdIndex',transactionIdIndex)
+    print('remarksIndex',remarksIndex)
+    print('amountIndex',amountIndex)
+    print('balanceIndex',balanceIndex)
     for txn_rows in transactions:
         if not txn_rows:
             continue

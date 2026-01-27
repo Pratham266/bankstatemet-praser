@@ -48,7 +48,7 @@ def generate_structured_output(grouped_transactions):
             "date": txn_date,
             "txnId": txn_id,
             "remarks": remarks,
-            "amount": amount_str,
+            "amount": amount_str.replace("-", "").replace("+", ""),
             "balance": balance,
             "type": txn_type
         })

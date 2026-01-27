@@ -5,6 +5,7 @@ import pdfplumber
 from pdfminer.pdfdocument import PDFPasswordIncorrect
 
 # ./venv/bin/streamlit run app.py
+# ./venv/bin/uvicorn api:app --reload
 st.set_page_config(page_title="PDF Extraction Tool", layout="wide")
 
 st.title("Bank Statement PDF Extractor")
@@ -29,7 +30,7 @@ if uploaded_file is not None:
     except PDFPasswordIncorrect:
         is_encrypted = True
     except Exception as e:
-        if "Password" in str(e) or "Encrypted" in str(e):
+        if "Password" in str(e) or "Encrypted" in str(e) or "PDFPasswordIncorrect" in repr(e):
             is_encrypted = True
     
     uploaded_file.seek(0)
