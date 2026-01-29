@@ -13,7 +13,7 @@ st.markdown("Upload a PDF file to extract transactions using PDFPlumber (Text-ba
 
 # Sidebar for options
 st.sidebar.header("Configuration")
-bank_options = ["UNION BANK OF INDIA","KOTAK MAHINDRA BANK","Generic (Raw Text)", ]
+bank_options = ["HDFC BANK","UNION BANK OF INDIA","KOTAK MAHINDRA BANK","Generic (Raw Text)", ]
 selected_bank = st.sidebar.selectbox("Select Bank Format", bank_options)
 
 uploaded_file = st.file_uploader("Choose a PDF file", type="pdf")

@@ -86,11 +86,6 @@ def group_transactions(pages,page_number):
                 json.dump(transactions, f, indent=4)
     # Validation and Processing to merge rows
     merged_transactions = []
-    print('dateIndex',dateIndex)
-    print('transactionIdIndex',transactionIdIndex)
-    print('remarksIndex',remarksIndex)
-    print('amountIndex',amountIndex)
-    print('balanceIndex',balanceIndex)
     for txn_rows in transactions:
         if not txn_rows:
             continue

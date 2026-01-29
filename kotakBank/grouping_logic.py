@@ -20,14 +20,14 @@ def normalize(items):
         )
     )
 
-def is_transaction_start(row):
+def is_transaction_start(row,tarnsectionDateIndex):
     """
     Transaction starts ONLY when a DATE is found in row[1].
     """
     if len(row) < 2:
         return False
 
-    col1 = str(row[1]).strip()
+    col1 = str(row[tarnsectionDateIndex]).strip()
 
     return is_date(col1)
 
@@ -88,7 +88,7 @@ def group_transactions(pages,page_number):
                 continue
             
             # Heuristic: New Transaction starts with a date in the first column
-            if is_transaction_start(row):
+            if is_transaction_start(row,tarnsectionDateIndex):
                 # If we were building a transaction, save it
                 if current_transaction:
                     transactions.append(current_transaction)
@@ -139,8 +139,8 @@ def group_transactions(pages,page_number):
             while len(row) < 9:
                 row.append("")
             # Date (Col 1)
-            if row[1] and str(row[1]).strip():
-                merged_date.append(str(row[1]).strip())
+            if row[tarnsectionDateIndex] and str(row[tarnsectionDateIndex]).strip():
+                merged_date.append(str(row[tarnsectionDateIndex]).strip())
             # Description (Col 4 + Col 5)
             # User wants: array[0][4]+array[0][5] + array[1][4]+array[1][5] ...
             part1 = str(row[transactionDetailsIndex]).strip() if row[transactionDetailsIndex] else ""

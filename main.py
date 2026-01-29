@@ -14,6 +14,10 @@ def process_bank_statement_pdf(pdf_file, bank_name="UNION BANK OF INDIA", passwo
             from unionBank.grouping_logic import group_transactions
             from unionBank.structured_output import generate_structured_output
             from unionBank.table_settings import table_settings
+        case "HDFC BANK":
+            from hdfcBank.grouping_logic import group_transactions
+            from hdfcBank.structured_output import generate_structured_output
+            from hdfcBank.table_settings import table_settings
         case "KOTAK MAHINDRA BANK":
             # Default to Kotak (or explicitly check "KOTAK MAHINDRA BANK")
             from kotakBank.grouping_logic import group_transactions
