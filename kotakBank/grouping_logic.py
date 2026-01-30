@@ -96,7 +96,7 @@ def group_transactions(pages,page_number):
                 # Start new transaction
                 current_transaction = [row]
                 in_transactions = True
-                
+                copyright
             elif in_transactions:
                 # If we are inside a transaction handling sequence, subsequent rows 
                 # with empty first column are likely continuation rows.

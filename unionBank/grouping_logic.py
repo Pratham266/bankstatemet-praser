@@ -73,7 +73,6 @@ def group_transactions(pages,page_number):
             if is_transaction_start(row,dateIndex):
                 # If we were building a transaction, save it
                 if current_transaction:
-                    print('current_transaction',current_transaction)
                     transactions.append(current_transaction)
                 
                 # Start new transaction

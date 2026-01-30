@@ -3,6 +3,7 @@ import main
 import json
 import pdfplumber
 from pdfminer.pdfdocument import PDFPasswordIncorrect
+from config import config
 
 # ./venv/bin/streamlit run app.py
 # ./venv/bin/uvicorn api:app --reload

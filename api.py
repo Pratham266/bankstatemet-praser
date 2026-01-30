@@ -1,14 +1,17 @@
-from fastapi import FastAPI, UploadFile, File, Form, Header, HTTPException, Depends
-from typing import Optional
-import shutil
 import os
+import shutil
+from typing import Optional
+from fastapi import FastAPI, UploadFile, File, Form, Header, HTTPException, Depends
+from dotenv import load_dotenv
 import pdfplumber
 from main import process_bank_statement_pdf
 
+from config import config
+
 app = FastAPI()
 
-# Simple API Key Validation
-API_KEY = "1234567890"  # Ideally handled via environment variables
+# API Key from configuration
+API_KEY = config.API_KEY
 
 def verify_api_key(x_api_key: str = Header(...)):
     if x_api_key != API_KEY:
@@ -61,4 +64,4 @@ async def parse_bank_statement(
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host=config.HOST, port=config.PORT)
