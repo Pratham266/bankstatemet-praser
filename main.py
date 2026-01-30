@@ -44,20 +44,20 @@ def process_bank_statement_pdf(pdf_file, bank_name="UNION BANK OF INDIA", passwo
         for i, page in enumerate(pdf.pages):
             print(f"Processing page {i+1} with pdfplumber...")
             tables = page.extract_tables(table_settings)
-            with open(f"page_{i+1}_raw1.json", "w") as f:
-                json.dump(tables, f, indent=4)
+            # with open(f"page_{i+1}_raw1.json", "w") as f:
+            #     json.dump(tables, f, indent=4)
             # Group transactions
             grouped_txns = group_transactions(tables,i+1)
 
-            with open(f"page_{i+1}_raw3.json", "w") as f:
-                json.dump(grouped_txns, f, indent=4)
+            # with open(f"page_{i+1}_raw3.json", "w") as f:
+            #     json.dump(grouped_txns, f, indent=4)
 
             # Generate structured output
             page_txns = generate_structured_output(grouped_txns)
             all_transactions.extend(page_txns)
             
-            with open(f"page_{i+1}_raw4.json", "w") as f:
-                json.dump(page_txns, f, indent=4)
+            # with open(f"page_{i+1}_raw4.json", "w") as f:
+            #     json.dump(page_txns, f, indent=4)
             
     return all_transactions
 
@@ -67,5 +67,5 @@ if __name__ == "__main__":
     else:
         # Simple CLI wrapper
         txns = process_bank_statement_pdf(sys.argv[1])
-        with open(sys.argv[2], 'w') as f:
-            json.dump(txns, f, indent=4)
+        # with open(sys.argv[2], 'w') as f:
+        #     json.dump(txns, f, indent=4)

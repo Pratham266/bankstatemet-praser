@@ -2,6 +2,7 @@ from fastapi import FastAPI, UploadFile, File, Form, Header, HTTPException, Depe
 from typing import Optional
 import shutil
 import os
+import pdfplumber
 from main import process_bank_statement_pdf
 
 app = FastAPI()
@@ -31,12 +32,24 @@ async def parse_bank_statement(
             # Determine bank name constant if needed, or pass string directly as main.py expects string
             # main.process_bank_statement_pdf expects the string name
             
+            # Get Page Count
+            page_count = 0
+            try:
+                with pdfplumber.open(temp_filename, password=password) as pdf:
+                    page_count = len(pdf.pages)
+            except Exception as e:
+                print(f"Error reading page count: {e}")
+
             transactions = process_bank_statement_pdf(temp_filename, bank_name=bank_name, password=password)
             
             return {
                 "status": "success",
                 "bank": bank_name,
-                "transactions": transactions
+                "transactions": transactions,
+                "documentmetadata": {
+                    "filename": file.filename,
+                    "page_count": page_count,
+                }
             }
         finally:
             # Cleanup

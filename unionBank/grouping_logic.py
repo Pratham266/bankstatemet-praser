@@ -82,8 +82,8 @@ def group_transactions(pages,page_number):
     # Append the final transaction if exists
     if current_transaction:
         transactions.append(current_transaction)
-    with open(f"page_{page_number}_raw2.json", "w") as f:
-                json.dump(transactions, f, indent=4)
+    # with open(f"page_{page_number}_raw2.json", "w") as f:
+    #             json.dump(transactions, f, indent=4)
     # Validation and Processing to merge rows
     merged_transactions = []
     for txn_rows in transactions:

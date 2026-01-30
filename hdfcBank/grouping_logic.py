@@ -124,7 +124,7 @@ def group_transactions(pages, page_number):
         ])
 
     # Optional debug dump
-    with open(f"page_{page_number}_grouped.json", "w") as f:
-        json.dump(final_rows, f, indent=2)
+    # with open(f"page_{page_number}_grouped.json", "w") as f:
+    #     json.dump(final_rows, f, indent=2)
 
     return final_rows
