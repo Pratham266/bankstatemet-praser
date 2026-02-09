@@ -45,6 +45,7 @@ def process_bank_statement_pdf(pdf_file, bank_name="UNION BANK OF INDIA", passwo
     """
     Process PDF using pdfplumber and the specified bank parser.
     Uses ProcessPoolExecutor for parallel processing and isolation.
+    Yields results page-by-page.
     """
     from concurrent.futures import ProcessPoolExecutor
     
@@ -61,15 +62,12 @@ def process_bank_statement_pdf(pdf_file, bank_name="UNION BANK OF INDIA", passwo
         case "KOTAK MAHINDRA BANK" | _:
             from kotakBank.structured_output import generate_structured_output
 
-    all_transactions = []
-    
-    # pdf_file is usually a path from api.py
     # Get page count first
     page_count = 0
     with pdfplumber.open(pdf_file, password=password) as pdf:
         page_count = len(pdf.pages)
     
-    # Use ProcessPoolExecutor for better isolation (pdfplumber/pdfminer is not thread-safe)
+    # Use ProcessPoolExecutor for better isolation
     # Using a small number of workers to manage memory
     with ProcessPoolExecutor(max_workers=2) as executor:
         # Prepare arguments: (pdf_path, page_num, bank_name, password)
@@ -78,16 +76,28 @@ def process_bank_statement_pdf(pdf_file, bank_name="UNION BANK OF INDIA", passwo
             for i in range(page_count)
         ]
         
-        for future in futures:
+        for i, future in enumerate(futures):
             try:
+                page_num = i + 1
                 grouped_txns = future.result()
                 if grouped_txns:
                     page_txns = generate_structured_output(grouped_txns)
-                    all_transactions.extend(page_txns)
+                    yield {
+                        "page": page_num,
+                        "transactions": page_txns
+                    }
+                else:
+                    yield {
+                        "page": page_num,
+                        "transactions": []
+                    }
             except Exception as e:
-                print(f"❌ Process failed: {e}")
-
-    return all_transactions
+                print(f"❌ Process failed for page {i+1}: {e}")
+                yield {
+                    "page": i + 1,
+                    "error": str(e),
+                    "transactions": []
+                }
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:

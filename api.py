@@ -4,7 +4,7 @@ import uuid
 import json
 from typing import Optional
 from fastapi import FastAPI, UploadFile, File, Form, Header, HTTPException, Depends
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from dotenv import load_dotenv
 import pdfplumber
 from main import process_bank_statement_pdf
@@ -32,14 +32,14 @@ async def parse_bank_statement(
     password: Optional[str] = Form(None),
     x_api_key: str = Depends(verify_api_key)
 ):
-    try:
-        # Save temp file
-        temp_filename = f"temp_{uuid.uuid4()}_{file.filename}"
-        with open(temp_filename, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
-            
+    # Save temp file
+    temp_filename = f"temp_{uuid.uuid4()}_{file.filename}"
+    with open(temp_filename, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    async def result_generator():
         try:
-            # Get Page Count
+            # Get Page Count first
             page_count = 0
             try:
                 with pdfplumber.open(temp_filename, password=password) as pdf:
@@ -47,53 +47,35 @@ async def parse_bank_statement(
             except Exception as e:
                 print(f"Error reading page count: {e}")
 
-            transactions = process_bank_statement_pdf(temp_filename, bank_name=bank_name, password=password)
-            
-            # Create result object
-            result_data = {
+            # Yield Metadata first
+            metadata = {
+                "type": "metadata",
                 "status": "success",
                 "bank": bank_name,
-                "transactions": transactions,
                 "documentmetadata": {
                     "filename": file.filename,
                     "page_count": page_count,
                 }
             }
-            
-            # Save result to a unique JSON file
-            result_id = str(uuid.uuid4())
-            result_filename = f"{result_id}.json"
-            result_path = os.path.join(RESULTS_DIR, result_filename)
-            
-            with open(result_path, "w") as f:
-                json.dump(result_data, f)
-            
-            return {
-                "status": "success",
-                "file_id": result_id
-            }
+            yield json.dumps(metadata) + "\n"
+
+            # Yield transactions page-by-page
+            for page_result in process_bank_statement_pdf(temp_filename, bank_name=bank_name, password=password):
+                page_result["type"] = "page_data"
+                yield json.dumps(page_result) + "\n"
+
+        except Exception as e:
+            yield json.dumps({"type": "error", "message": str(e)}) + "\n"
         finally:
             # Cleanup temp PDF
             if os.path.exists(temp_filename):
-                os.remove(temp_filename)
-                
-    except Exception as e:
-         raise HTTPException(status_code=500, detail=str(e))
+                try:
+                    os.remove(temp_filename)
+                    print(f"🗑️ Cleaned up temp file: {temp_filename}")
+                except Exception as cleanup_err:
+                    print(f"Error cleaning up: {cleanup_err}")
 
-@app.get("/results/{file_id}")
-async def get_result_file(file_id: str, x_api_key: str = Depends(verify_api_key)):
-    result_path = os.path.join(RESULTS_DIR, f"{file_id}.json")
-    if not os.path.exists(result_path):
-        raise HTTPException(status_code=404, detail="Result file not found")
-    return FileResponse(result_path)
-
-@app.delete("/results/{file_id}")
-async def delete_result_file(file_id: str, x_api_key: str = Depends(verify_api_key)):
-    result_path = os.path.join(RESULTS_DIR, f"{file_id}.json")
-    if os.path.exists(result_path):
-        os.remove(result_path)
-        return {"status": "success", "message": "Result file deleted"}
-    raise HTTPException(status_code=404, detail="Result file not found")
+    return StreamingResponse(result_generator(), media_type="application/x-ndjson")
 
 if __name__ == "__main__":
     import uvicorn
