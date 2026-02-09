@@ -26,6 +26,14 @@ def verify_api_key(x_api_key: str = Header(...)):
 RESULTS_DIR = "results"
 os.makedirs(RESULTS_DIR, exist_ok=True)
 
+@app.get("/")
+async def root():
+    return {"message": "Python Scraper is Alive! 🐍", "status": "running"}
+
+@app.get("/health")
+async def health():
+    return {"status": "ok", "service": "python-scraper"}
+
 @app.post("/parse")
 async def parse_bank_statement(
     file: UploadFile = File(...),
