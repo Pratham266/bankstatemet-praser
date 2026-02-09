@@ -62,37 +62,47 @@ def process_bank_statement_pdf(pdf_file, bank_name="UNION BANK OF INDIA", passwo
         case "KOTAK MAHINDRA BANK" | _:
             from kotakBank.structured_output import generate_structured_output
 
-    # Get page count first
-    page_count = 0
-    with pdfplumber.open(pdf_file, password=password) as pdf:
-        page_count = len(pdf.pages)
-    
     # Process pages sequentially for memory stability on hosted environments (like Render)
-    for i in range(page_count):
-        page_num = i + 1
-        try:
-            print(f"📦 Processing page {page_num}/{page_count}...")
-            # Call the worker logic directly
-            grouped_txns = _process_single_page(str(pdf_file), page_num, bank_name, password)
+    try:
+        with pdfplumber.open(pdf_file, password=password) as pdf:
+            page_count = len(pdf.pages)
             
-            if grouped_txns:
-                page_txns = generate_structured_output(grouped_txns)
-                yield {
-                    "page": page_num,
-                    "transactions": page_txns
-                }
-            else:
-                yield {
-                    "page": page_num,
-                    "transactions": []
-                }
-        except Exception as e:
-            print(f"❌ Process failed for page {page_num}: {e}")
-            yield {
-                "page": page_num,
-                "error": str(e),
-                "transactions": []
-            }
+            for i in range(page_count):
+                page_num = i + 1
+                try:
+                    print(f"📦 Processing page {page_num}/{page_count}...")
+                    page = pdf.pages[i]
+                    
+                    # Extract tables using settings
+                    tables = page.extract_tables(table_settings)
+                    # Group transactions using bank-specific logic
+                    grouped_txns = group_transactions(tables, page_num)
+                    
+                    if grouped_txns:
+                        page_txns = generate_structured_output(grouped_txns)
+                        yield {
+                            "page": page_num,
+                            "transactions": page_txns
+                        }
+                    else:
+                        yield {
+                            "page": page_num,
+                            "transactions": []
+                        }
+                except Exception as e:
+                    print(f"❌ Error on page {page_num}: {e}")
+                    yield {
+                        "page": page_num,
+                        "error": str(e),
+                        "transactions": []
+                    }
+    except Exception as e:
+        print(f"❌ Failed to open PDF: {e}")
+        yield {
+            "page": 0,
+            "error": f"Failed to open PDF: {str(e)}",
+            "transactions": []
+        }
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:

@@ -1,4 +1,5 @@
 import os
+import asyncio
 import shutil
 import uuid
 import json
@@ -63,6 +64,8 @@ async def parse_bank_statement(
             for page_result in process_bank_statement_pdf(temp_filename, bank_name=bank_name, password=password):
                 page_result["type"] = "page_data"
                 yield json.dumps(page_result) + "\n"
+                # Important: Allow heartbeats/other tasks to run during intensive parsing
+                await asyncio.sleep(0.01)
 
         except Exception as e:
             yield json.dumps({"type": "error", "message": str(e)}) + "\n"
