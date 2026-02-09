@@ -49,18 +49,28 @@ def process_bank_statement_pdf(pdf_file, bank_name="UNION BANK OF INDIA", passwo
     """
     from concurrent.futures import ProcessPoolExecutor
     
-    # We need to import the output generator for the main process
+    # We need to import the parser components for the main process
     match bank_name:
         case "UNION BANK OF INDIA":
             from unionBank.structured_output import generate_structured_output
+            from unionBank.grouping_logic import group_transactions
+            from unionBank.table_settings import table_settings
         case "HDFC BANK":
             from hdfcBank.structured_output import generate_structured_output
+            from hdfcBank.grouping_logic import group_transactions
+            from hdfcBank.table_settings import table_settings
         case "ICICI BANK":
             from iciciBank.structured_output import generate_structured_output
+            from iciciBank.grouping_logic import group_transactions
+            from iciciBank.table_settings import table_settings
         case "KARNAVATI BANK":
             from karnavatiBank.structured_output import generate_structured_output
+            from karnavatiBank.grouping_logic import group_transactions
+            from karnavatiBank.table_settings import table_settings
         case "KOTAK MAHINDRA BANK" | _:
             from kotakBank.structured_output import generate_structured_output
+            from kotakBank.grouping_logic import group_transactions
+            from kotakBank.table_settings import table_settings
 
     # Process pages sequentially for memory stability on hosted environments (like Render)
     try:
