@@ -67,37 +67,32 @@ def process_bank_statement_pdf(pdf_file, bank_name="UNION BANK OF INDIA", passwo
     with pdfplumber.open(pdf_file, password=password) as pdf:
         page_count = len(pdf.pages)
     
-    # Use ProcessPoolExecutor for better isolation
-    # Using a small number of workers to manage memory
-    with ProcessPoolExecutor(max_workers=2) as executor:
-        # Prepare arguments: (pdf_path, page_num, bank_name, password)
-        futures = [
-            executor.submit(_process_single_page, str(pdf_file), i + 1, bank_name, password)
-            for i in range(page_count)
-        ]
-        
-        for i, future in enumerate(futures):
-            try:
-                page_num = i + 1
-                grouped_txns = future.result()
-                if grouped_txns:
-                    page_txns = generate_structured_output(grouped_txns)
-                    yield {
-                        "page": page_num,
-                        "transactions": page_txns
-                    }
-                else:
-                    yield {
-                        "page": page_num,
-                        "transactions": []
-                    }
-            except Exception as e:
-                print(f"❌ Process failed for page {i+1}: {e}")
+    # Process pages sequentially for memory stability on hosted environments (like Render)
+    for i in range(page_count):
+        page_num = i + 1
+        try:
+            print(f"📦 Processing page {page_num}/{page_count}...")
+            # Call the worker logic directly
+            grouped_txns = _process_single_page(str(pdf_file), page_num, bank_name, password)
+            
+            if grouped_txns:
+                page_txns = generate_structured_output(grouped_txns)
                 yield {
-                    "page": i + 1,
-                    "error": str(e),
+                    "page": page_num,
+                    "transactions": page_txns
+                }
+            else:
+                yield {
+                    "page": page_num,
                     "transactions": []
                 }
+        except Exception as e:
+            print(f"❌ Process failed for page {page_num}: {e}")
+            yield {
+                "page": page_num,
+                "error": str(e),
+                "transactions": []
+            }
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
