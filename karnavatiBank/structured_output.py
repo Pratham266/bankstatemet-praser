@@ -56,6 +56,10 @@ def generate_structured_output(grouped_transactions):
         else:
             txn_id = f"{txn_date}_{amount}_{balance}"
 
+        
+        if narration.strip().upper() in ["OPENING BALANCE", "CLOSING BALANCE"]:
+            continue
+
         structured_data.append({
             "date": txn_date,
             "txnId": txn_id,
